@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop" 
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-4.3.xsd 
+    http://www.springframework.org/schema/mvc 
+    http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd 
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context-4.3.xsd 
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop-4.3.xsd 
+    http://www.springframework.org/schema/tx 
+    http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+
+	<!-- 配置整合mybatis过程 -->
+
+	<!-- 1.配置数据库相关参数properties的属性：${url} -->
+    <!--读取db.properties -->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+	<!-- 2.数据库连接池 -->
+    <!-- 配置数据源 -->
+    <bean id="dataSource" 
+         class="org.apache.commons.dbcp2.BasicDataSource">
+         <!--数据库驱动 -->
+         <property name="driverClassName" value="${jdbc.driver}"/>
+         <!--连接数据库的url -->
+         <property name="url" value="${jdbc.url}" />
+         <!--连接数据库的用户名 -->
+         <property name="username" value="${jdbc.username}" />
+         <!--连接数据库的密码 -->
+         <property name="password" value="${jdbc.password}" />
+         <!--最大连接数 -->
+         <property name="maxTotal" value="${jdbc.maxTotal}" />
+         <!--最大空闲连接  -->
+         <property name="maxIdle" value="${jdbc.maxIdle}" />
+         <!--初始化连接数  -->
+         <property name="initialSize" value="${jdbc.initialSize}" />
+	</bean>
+
+	<!-- 3.配置SqlSessionFactory对象 -->
+	<!-- 配置 MyBatis的工厂 -->
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 数据源 --><!-- 注入数据库连接池 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 配置MyBatis的核心配置文件所在位置 --><!-- 配置MyBaties全局配置文件:mybatis-config.xml -->
+		<property name="configLocation" value="classpath:spring/mybatis-config.xml" />
+		<!-- 扫描entity包 使用别名 -->
+		<property name="typeAliasesPackage" value="com.zh.po"/>
+		<!-- 扫描sql配置文件:mapper需要的xml文件 -->
+		<property name="mapperLocations" value="classpath:mapper/*.xml" />
+	</bean>
+
+	<!-- 4.配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->
+	<!-- 接口开发,扫描 com.zh.dao包 ，写在此包下的接口即可被扫描到 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.zh.dao" />
+	</bean>
+
+
+	<!-- 事务管理器 --> <!-- 配置事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<!-- 数据源 --><!-- 注入数据库连接池 -->
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- 通知 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<!-- 传播行为 -->
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="create*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="find*" propagation="SUPPORTS"
+					   read-only="true" />
+			<tx:method name="select*" propagation="SUPPORTS"
+					   read-only="true" />
+			<tx:method name="get*" propagation="SUPPORTS"
+					   read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 切面 -->
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice"
+					 pointcut="execution(* com.zh.service.*.*(..))" />
+	</aop:config>
+
+
+
+	<!-- 配置扫描@Service注解 -->
+	<!-- 扫描service包下所有使用注解的类型 -->
+	<context:component-scan base-package="com.zh.service"/>
+</beans>

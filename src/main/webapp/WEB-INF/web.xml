@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID"
+         version="3.1">
+
+  <display-name>Archetype Created Web Application</display-name>
+
+<!--相当于设定了一个固定值，我们可以在程序中去使用它contextConfigLocation
+程序中的所有servlet可以利用这个值
+-->
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:spring/applicationContext.xml</param-value>
+  </context-param>
+
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+
+  <!--当服务器启动时，服务器会读取web.xml配置，
+  当读到<listener></listener>和<context-param></context-param>这两个节点的时候，
+  容器会将这两个节点set到ServletContext(上下文对象)中，
+  这样我们在程序中就能通过这个上下文对象去取得我们这个配置值
+  -->
+
+  <!--  filter改了名，之前是encoding-->
+  <filter>
+    <filter-name>encoding_Filter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>UTF-8</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>encoding_Filter</filter-name>
+    <url-pattern>*.action</url-pattern>
+  </filter-mapping>
+
+  <!--1.配置前置控制器 -->
+  <servlet>
+    <servlet-name>SpringDispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+<!--    <init-param>是放在一个servlet内的，所以这个参数是只针对某一个servlet而言的-->
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <!-- 引入spring配置文件 -->
+      <param-value>classpath:spring/springmvc-config.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <!--对客户端请求的静态资源如图片、JS文件等的请求交由默认的servlet进行处理-->
+  <servlet-mapping>
+    <servlet-name>SpringDispatcherServlet</servlet-name>
+    <url-pattern>*.action</url-pattern>
+  </servlet-mapping>
+
+<!--  <servlet-mapping>-->
+<!--    <servlet-name>SpringDispatcherServlet</servlet-name>-->
+<!--    <url-pattern>/</url-pattern>-->
+<!--  </servlet-mapping>-->
+
+  <!--2.欢迎文件-->
+  <welcome-file-list>
+    <welcome-file>/WEB-INF/jsp/index.jsp</welcome-file>
+  </welcome-file-list>
+</web-app>
